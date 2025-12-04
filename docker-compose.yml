@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: db_service_pg
+    ports:
+      - "5432:5432"
+    networks:
+      - msnet
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  db_service:
+    build: ./db_service
+    container_name: db_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8083:8083"
+    networks:
+      - msnet
+
+
+  hello_api:
+    build: ./hello_api
+    container_name: hello_api
+    ports:
+      - "8081:8081"
+    networks:
+      - msnet
+
+
+  world_api:
+    build: ./world_api
+    container_name: world_api
+    ports:
+      - "8082:8082"
+    networks:
+      - msnet
+
+
+  hello_world_api:
+    build: ./hello_world_api
+    container_name: hello_world_api
+    depends_on:
+      - hello_api
+      - world_api
+    ports:
+      - "8080:8080"
+    networks:
+      - msnet
+
+networks:
+  msnet:
+    driver: bridge

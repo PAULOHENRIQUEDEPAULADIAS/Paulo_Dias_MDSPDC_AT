@@ -2,20 +2,25 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="service_discovery" />
         <module name="hello_world_api" />
+        <module name="db_service" />
         <module name="hello_api" />
         <module name="world_api" />
-        <module name="gatway_api" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="gatway_api" target="21" />
+      <module name="service_discovery" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="db_service" options="-parameters" />
       <module name="gatway_api" options="-parameters" />
       <module name="hello_api" options="-parameters" />
       <module name="hello_world_api" options="-parameters" />

@@ -9,7 +9,14 @@
         <option value="$PROJECT_DIR$/service_discovery/pom.xml" />
         <option value="$PROJECT_DIR$/hello_world_api/pom.xml" />
         <option value="$PROJECT_DIR$/gatway_api/pom.xml" />
+        <option value="$PROJECT_DIR$/db_service/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/gatway_api/pom.xml" />
+        <option value="$PROJECT_DIR$/service_discovery/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="21" project-jdk-type="JavaSDK">
