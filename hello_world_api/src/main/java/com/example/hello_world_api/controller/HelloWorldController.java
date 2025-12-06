@@ -1,29 +1,26 @@
 package com.example.hello_world_api.controller;
 
+import com.example.hello_world_api.service.HelloWorldService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/hello_world")
-class HelloWorldController {
+public class HelloWorldController {
 
-    private final WebClient webClient;
+    private final HelloWorldService service;
 
-    public HelloWorldController(WebClient.Builder builder) {
-        this.webClient = builder.build();
+    public HelloWorldController(HelloWorldService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public String helloWorld() {
-
-        String helloURL = System.getProperty("HELLO_API_URL");
-        String worldURL = System.getProperty("WORLD_API_URL");
-
-        String hello = webClient.get().uri(helloURL).retrieve().bodyToMono(String.class).block();
-        String world = webClient.get().uri(worldURL).retrieve().bodyToMono(String.class).block();
-
-        return hello + world;
+    public Mono<String> helloWorld() {
+        return Mono.zip(
+                service.fetchHello(),
+                service.fetchWorld()
+        ).map(tuple -> tuple.getT1() + tuple.getT2());
     }
 }

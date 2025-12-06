@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: world-api }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: world-api } }
+  template:
+    metadata: { labels: { app: world-api } }
+    spec:
+      containers:
+        - name: world-api
+          image: paulo_dias_mdspdc_at-world-api:latest   # ajuste
+          env:
+            - name: DB_SERVICE_URL
+              value: "http://db-service:8083"
+          ports: [{ containerPort: 8082 }]

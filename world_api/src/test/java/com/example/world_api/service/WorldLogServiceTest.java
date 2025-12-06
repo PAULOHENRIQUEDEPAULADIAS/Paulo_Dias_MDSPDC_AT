@@ -1,62 +1,75 @@
 package com.example.world_api.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
+import java.net.URI;
+import java.util.Optional;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class WorldLogServiceTest {
+@ExtendWith(MockitoExtension.class)
+class LogServiceTest {
 
-    private WebClient mockClient;
-    private WebClient.RequestBodyUriSpec mockUriSpec;
-    private WebClient.RequestBodySpec mockBodySpec;
-    private WebClient.ResponseSpec mockResponseSpec;
+    @Mock
+    private WebClient dbClient;
 
-    private WorldLogService service;
+    @Mock
+    private Logger logger;
 
-    @BeforeEach
-    void setup() {
-        mockClient = mock(WebClient.class);
-
-        mockUriSpec = mock(WebClient.RequestBodyUriSpec.class);
-        mockBodySpec = mock(WebClient.RequestBodySpec.class);
-        mockResponseSpec = mock(WebClient.ResponseSpec.class);
-
-        // Encadeamento para POST sem body
-        when(mockClient.post()).thenReturn(mockUriSpec);
-        when(mockUriSpec.uri(anyString())).thenReturn(mockBodySpec);
-        when(mockBodySpec.retrieve()).thenReturn(mockResponseSpec);
-
-        service = new WorldLogService(mockClient);
-    }
+    @InjectMocks
+    private LogService logService;
 
     @Test
-    void shouldLogCallSuccessfully() {
-        when(mockResponseSpec.bodyToMono(Void.class)).thenReturn(Mono.empty());
+    void sendLog_ShouldSendPostRequestSuccessfully() {
+        // Arrange
+        WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+        WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
 
-        StepVerifier.create(service.logCall("Test Response"))
+        when(dbClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(any(Function.class))).thenReturn(requestBodySpec);
+        when(requestBodySpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(Void.class)).thenReturn(Mono.empty());
+
+        // Act
+        Mono<Void> result = logService.sendLog("test_service", "test_response");
+
+        // Assert
+        StepVerifier.create(result)
                 .verifyComplete();
 
-        verify(mockClient).post();
-        verify(mockUriSpec).uri(argThat((String str) -> str.equals("http://localhost:8080/logs?service=world_api&response=Test Response")));
-        verify(mockBodySpec).retrieve();
-    }
+        // Captura e verifica a Function passada para uri
+        ArgumentCaptor<Function<UriBuilder, URI>> captor = ArgumentCaptor.forClass(Function.class);
+        verify(requestBodyUriSpec).uri(captor.capture());
+        Function<UriBuilder, URI> capturedFunction = captor.getValue();
 
-    @Test
-    void shouldHandleErrorsAndReturnEmptyMono() {
-        when(mockResponseSpec.bodyToMono(Void.class))
-                .thenReturn(Mono.error(new RuntimeException("Test error")));
+        // Cria um mock UriBuilder para aplicar a function e verificar chamadas
+        UriBuilder mockUriBuilder = mock(UriBuilder.class);
+        when(mockUriBuilder.path(anyString())).thenReturn(mockUriBuilder);
+        when(mockUriBuilder.queryParam(anyString(), Optional.ofNullable(any()))).thenReturn(mockUriBuilder);
+        when(mockUriBuilder.build()).thenReturn(URI.create("http://dummy"));  // Retorno dummy para apply não falhar
 
-        StepVerifier.create(service.logCall("Error Response"))
-                .verifyComplete(); // Erro é engolido e retorna empty
+        capturedFunction.apply(mockUriBuilder);
 
-        verify(mockClient).post();
-        verify(mockUriSpec).uri(argThat((String str) -> str.equals("http://localhost:8080/logs?service=world_api&response=Error Response")));
-        verify(mockBodySpec).retrieve();
+        // Verifica as chamadas no UriBuilder
+        verify(mockUriBuilder).path("/logs");
+        verify(mockUriBuilder).queryParam("service", "test_service");
+        verify(mockUriBuilder).queryParam("response", "test_response");
+        verify(mockUriBuilder).queryParam(eq("timestamp"), Optional.ofNullable(argThat(timestamp -> timestamp instanceof String && !((String) timestamp).isEmpty())));
+
+        verifyNoInteractions(logger);  // Sem erro, sem warn
     }
 }

@@ -10,11 +10,13 @@
         <option value="$PROJECT_DIR$/hello_world_api/pom.xml" />
         <option value="$PROJECT_DIR$/gatway_api/pom.xml" />
         <option value="$PROJECT_DIR$/db_service/pom.xml" />
+        <option value="$PROJECT_DIR$/k8s/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/gatway_api/pom.xml" />
+        <option value="$PROJECT_DIR$/k8s/pom.xml" />
         <option value="$PROJECT_DIR$/service_discovery/pom.xml" />
       </set>
     </option>

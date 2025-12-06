@@ -7,9 +7,10 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
       POSTGRES_DB: db_service_pg
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     networks:
@@ -21,15 +22,15 @@ services:
       retries: 10
 
 
-  db_service:
+  db-service:
     build: ./db_service
-    container_name: db_service
+    container_name: db-service
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DB_USER: "${DB_USER}"
-      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
       SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8083:8083"
@@ -37,34 +38,54 @@ services:
       - msnet
 
 
-  hello_api:
+  hello-api:
     build: ./hello_api
     container_name: hello_api
     ports:
       - "8081:8081"
+    environment:
+      DB_SERVICE_URL: http://db-service:8083
     networks:
       - msnet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8081/hello || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
-  world_api:
+  world-api:
     build: ./world_api
     container_name: world_api
     ports:
       - "8082:8082"
+    environment:
+      DB_SERVICE_URL: http://db-service:8083
     networks:
       - msnet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8082/world || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
-  hello_world_api:
+  hello-world-api:
     build: ./hello_world_api
     container_name: hello_world_api
     depends_on:
-      - hello_api
-      - world_api
+      hello-api:
+        condition: service_healthy
+      world-api:
+        condition: service_healthy
+    environment:
+      HELLO: "http://hello-api:8081"
+      WORLD: "http://world-api:8082"
     ports:
       - "8080:8080"
     networks:
       - msnet
+
 
 networks:
   msnet:

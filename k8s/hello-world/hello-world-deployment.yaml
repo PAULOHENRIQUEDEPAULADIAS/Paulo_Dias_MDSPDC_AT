@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: hello-world-api }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: hello-world-api } }
+  template:
+    metadata: { labels: { app: hello-world-api } }
+    spec:
+      containers:
+        - name: hello-world-api
+          image: paulo_dias_mdspdc_at-hello-world-api:latest   # ajuste
+          env:
+            - name: DB_SERVICE_URL
+              value: "http://db-service:8083"
+          ports: [{ containerPort: 8080 }]

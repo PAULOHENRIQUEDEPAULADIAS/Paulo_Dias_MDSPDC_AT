@@ -2,6 +2,8 @@ package com.example.db_service.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.relational.core.mapping.Column;
+
 
 import java.time.LocalDateTime;
 
@@ -11,8 +13,13 @@ public class CallLog {
     @Id
     private Long id;
 
+    @Column("service_name")
     private String serviceName;
+
+    @Column("response")
     private String response;
+
+    @Column("timestamp")
     private LocalDateTime timestamp;
 
     public CallLog(String serviceName, String response) {

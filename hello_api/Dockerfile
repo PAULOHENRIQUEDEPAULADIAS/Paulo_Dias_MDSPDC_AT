@@ -10,6 +10,8 @@ RUN ./mvnw dependency:resolve
 COPY src src
 RUN ./mvnw package -DskipTests
 
-EXPOSE 8081
+RUN apt-get update && apt-get install -y wget
 
+EXPOSE 8081
+ENV SPRING_PROFILES_ACTIVE=docker
 CMD ["java", "-jar", "target/hello_api-0.0.1-SNAPSHOT.jar"]

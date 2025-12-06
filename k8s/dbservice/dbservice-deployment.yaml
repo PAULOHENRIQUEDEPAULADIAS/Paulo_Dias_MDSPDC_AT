@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-service
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: db-service } }
+  template:
+    metadata: { labels: { app: db-service } }
+    spec:
+      containers:
+        - name: db-service
+          image: paulo_dias_mdspdc_at-db-service:latest   # troque para sua imagem
+          env:
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+          ports: [{ containerPort: 8083 }]

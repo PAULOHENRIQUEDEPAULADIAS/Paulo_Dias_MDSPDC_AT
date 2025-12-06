@@ -1,15 +1,15 @@
-FROM eclipse-temurin:21-jdk
-
+# Etapa 1: build
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
+COPY . .
+RUN ./mvnw clean package -DskipTests
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-RUN ./mvnw dependency:resolve
-
-COPY src src
-RUN ./mvnw package -DskipTests
+# Etapa 2: imagem final
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/target/db_service-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8083
+ENV SPRING_PROFILES_ACTIVE=docker
 
-CMD ["java", "-jar", "target/db_service-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
